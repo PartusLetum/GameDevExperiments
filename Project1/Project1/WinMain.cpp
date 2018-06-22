@@ -22,9 +22,9 @@ Point3d faceNormals[faceCount];	// Normals to the faces that make up the model
 
 void LoadModel()
 {
-	vertices[0].x = 10; vertices[0].y = 10; vertices[0].z = 0;
-	vertices[1].x = 90; vertices[1].y = 90; vertices[1].z = 0;
-	vertices[2].x = 10; vertices[2].y = 90; vertices[2].z = 0;
+	vertices[0].x = -50; vertices[0].y = -50; vertices[0].z = 0;
+	vertices[1].x =  50; vertices[1].y =  50; vertices[1].z = 0;
+	vertices[2].x =  50; vertices[2].y = -50; vertices[2].z = 0;
 
 	faces[0].v1 = 0; faces[0].v2 = 1; faces[0].v3 = 2;
 }
@@ -44,23 +44,14 @@ void DrawModel(HDC hdc)
 	{
 		COLORREF color = RGB(255, 255, 255);
 		//color = RGB(100, 0, 0);
-		DrawLine(bufDC, color, (int)vertices[faces[i].v1].x, (int)vertices[faces[i].v1].y, (int)vertices[faces[i].v2].x, (int)vertices[faces[i].v2].y);
-		DrawLine(bufDC, color, (int)vertices[faces[i].v2].x, (int)vertices[faces[i].v2].y, (int)vertices[faces[i].v3].x, (int)vertices[faces[i].v3].y);
-		DrawLine(bufDC, color, (int)vertices[faces[i].v3].x, (int)vertices[faces[i].v3].y, (int)vertices[faces[i].v1].x, (int)vertices[faces[i].v1].y);
+		DrawLine(bufDC, color, (int)vertices[faces[i].v1].x + 100, (int)vertices[faces[i].v1].y + 100, (int)vertices[faces[i].v2].x + 100, (int)vertices[faces[i].v2].y + 100);
+		DrawLine(bufDC, color, (int)vertices[faces[i].v2].x + 100, (int)vertices[faces[i].v2].y + 100, (int)vertices[faces[i].v3].x + 100, (int)vertices[faces[i].v3].y + 100);
+		DrawLine(bufDC, color, (int)vertices[faces[i].v3].x + 100, (int)vertices[faces[i].v3].y + 100, (int)vertices[faces[i].v1].x + 100, (int)vertices[faces[i].v1].y + 100);
 	}
 }
 
 void Render(HDC hdc)
 {
-	//int x1, y1, x2, y2;
-	//x1 = rand() % 200;
-	//y1 = rand() % 200;
-	//x2 = rand() % 200;
-	//y2 = rand() % 200;
-	//COLORREF color = RGB(x1 % 255, x1 % 255, x1 % 255);
-	////color = RGB(100, 0, 0);
-	//SetPixel(bufDC, x1, y1, color);  // random
-	////DrawLine(bufDC, color, x1, y1, x2, y2);
 	DrawModel(hdc);
 	BitBlt(hdc, 0, 0, rect.right, rect.bottom, bufDC, 0, 0, SRCCOPY);
 }
@@ -85,6 +76,20 @@ DWORD RenderThread(HWND hwnd)
 	return 0;
 }
 
+void SetClientSize(HWND hwnd, int clientWidth, int clientHeight)
+{
+	if (IsWindow(hwnd))
+	{
+		RECT winRC, clientRC;
+		GetWindowRect(hwnd, &winRC); //get the current window rect
+		GetClientRect(hwnd, &clientRC); //get the current client rect
+		int dx = (clientRC.right - clientRC.left) - clientWidth; //calculate difference between current client width and desired client width
+		int dy = (clientRC.bottom - clientRC.top) - clientHeight; //same for height
+																  //adjust the size
+		SetWindowPos(hwnd, 0, 0, 0, winRC.right - winRC.left - dx, winRC.bottom - winRC.top - dy, SWP_NOZORDER | SWP_NOMOVE);
+	}
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -93,6 +98,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_CLOSE:   DestroyWindow(hwnd); isRunning = false; PostQuitMessage(0); return 0;
 	case WM_DESTROY: PostQuitMessage(0);  return 0;
 	case WM_PAINT:   PaintWindow(hwnd);   return 0;
+	//case WM_SIZING:
+	//case WM_SIZE:	 PaintWindow(hwnd);   return 0;
 	case WM_ERASEBKGND: return (LRESULT)1;
 	}
 	return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -140,6 +147,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLin
 	ShowWindow(hwnd, SW_SHOWNORMAL);
 
 	GetClientRect(hwnd, &rect);
+	rect.top = 0; rect.left = 0; rect.right = 320; rect.bottom = 240;
+	SetClientSize(hwnd, 320, 240);
 
 	bufDC = CreateCompatibleDC(GetDC(hwnd));
 	bufBMP = CreateCompatibleBitmap(GetDC(hwnd), rect.right, rect.bottom);
