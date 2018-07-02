@@ -32,3 +32,5 @@ _ReSharper*/
 packages/
 *VC.db
 *.VC.db
+/Win32Project1/Win32Project1.VC.VC.opendb
+/Win32Project1/Win32Project1.VC.db
