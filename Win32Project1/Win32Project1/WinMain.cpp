@@ -48,17 +48,22 @@ Point3d SubtractVector( Point3d u, Point3d v )
 	return u;
 }
 
+Point3d CrossJoin(Point3d u, Point3d v)
+{
+	Point3d uv;
+
+	uv.x = (u.y * v.z) - (u.z * v.y);
+	uv.y = (u.z * v.x) - (u.x * v.z);
+	uv.z = (u.x * v.y) - (u.y * v.x);
+
+	return uv;
+}
+
 Point3d CalculateSurfaceNormal( Point3d v1, Point3d v2, Point3d v3 )
 {
-	Point3d normal;
-	Point3d U, V;
-
-	U.x = v1.x - v2.x; U.y = v1.y - v2.y; U.z = v1.z - v2.z;
-	V.x = v1.x - v3.x; V.y = v1.y - v3.y; V.z = v1.z - v3.z;
-
-	normal.x = ( U.y * V.z ) - ( U.z * V.y );
-	normal.y = ( U.z * V.x ) - ( U.x * V.z );
-	normal.z = ( U.x * V.y ) - ( U.y * V.x );
+	Point3d U = SubtractVector(v2, v1);
+	Point3d V = SubtractVector(v3, v1);
+	Point3d normal = CrossJoin(V, U);
 
 	NormalizeVector( normal );
 
@@ -258,12 +263,13 @@ void DrawModel(HDC hdc)
 	Point3d* nt = ( Point3d* )malloc( sizeof( Point3d ) * faceCount );
 	for( int i = 0; i < faceCount; i++ )
 	{
-		nt[i].x = faceNormals[i].x;
-		nt[i].y = faceNormals[i].y;
-		nt[i].z = faceNormals[i].z;
+		float x = faceNormals[i].x;
+		float y = faceNormals[i].y;
+		float z = faceNormals[i].z;
 
-		nt[i].x = ( nt[i].z * cos( angle ) ) + ( nt[i].x * sin( angle ) );
-		nt[i].z = ( nt[i].z * sin( angle ) ) - ( nt[i].x * cos( angle ) );
+		nt[i].x = ( z * cos( angle ) ) + ( x * sin( angle ) );
+		nt[i].y = y;
+		nt[i].z = ( z * sin( angle ) ) - ( x * cos( angle ) );
 	}
 
 	// Render Faces
@@ -291,6 +297,7 @@ void DrawModel(HDC hdc)
 	}
 	
 	delete vt;
+	delete vs;
 	delete nt;
 }
 
@@ -317,11 +324,11 @@ DWORD RenderThread(HWND hwnd)
 	while (isRunning)
 	{
 		// Do update, rendering and all the real game loop stuff
-		//viewLocation.x += ( movingLeft ? 1.0f : -1.0f );
+		//viewLocation.x += ( movingLeft ? 0.1f : -0.1f );
 		if( viewLocation.x > 320 ) movingLeft = false;
 		if( viewLocation.x < -320 ) movingLeft = true;
 
-		//angle += 0.0001f;
+		angle += 0.0001f;
 
 		Render(hdc);
 	}
